@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#020710">
+<title>MV51 • Portal Control</title>
+<style>
+  :root{--ink:#dceeff;--muted:#81afcf;--dim:#507b9b;--cyan:#42cbf6;--blue:#157ac5;--line:#21628a;--green:#22e2af;--amber:#efb95d;--red:#ed3439;--panel:#061524}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{width:100%;height:100%;margin:0;overflow:hidden;background:#01040a;color:var(--ink);font-family:"Arial Narrow","Roboto Condensed","Segoe UI",Arial,sans-serif;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+  button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:2px solid #d0f6ff;outline-offset:2px}
+  body.cursor-idle,body.cursor-idle *{cursor:none!important}
+  #scaler{position:absolute;width:1920px;height:1080px;transform-origin:top left;overflow:hidden;background:radial-gradient(ellipse at 52% 45%,#0a1a31 0%,#030c18 57%,#01060c 100%)}
+  #scaler:before{content:"";pointer-events:none;position:absolute;inset:0;z-index:15;border:20px solid transparent;border-image:linear-gradient(130deg,#202b35,#0b111a 22%,#263a4c 55%,#14161e 81%,#425165) 1;box-shadow:inset 0 0 0 2px #45647b,inset 0 0 0 6px #03070e,inset 0 0 46px #000,0 0 35px #000}
+  #scaler:after{content:"";pointer-events:none;position:absolute;inset:22px;z-index:14;border:1px solid #41617b;opacity:.7}
+  .screw{position:absolute;z-index:16;width:12px;height:12px;border:2px solid #567084;border-radius:50%;background:#030914;box-shadow:0 1px 4px #000}.screw:after{content:"";position:absolute;width:7px;height:1px;background:#8ca5b2;left:1px;top:4px;transform:rotate(-35deg)}
+  .s1{left:7px;top:72px}.s2{right:7px;top:72px}.s3{left:7px;bottom:66px}.s4{right:7px;bottom:66px}
+  #console{position:absolute;inset:28px 30px 27px;display:grid;grid-template-rows:66px 778px 153px;row-gap:14px}
+  header{height:66px;display:flex;align-items:center;gap:18px;border-bottom:2px solid #1975aa;position:relative;padding:0 10px 5px}
+  header:after{content:"";position:absolute;bottom:-6px;left:0;right:0;height:1px;background:#0b334e}
+  .brand{font-size:46px;font-weight:850;font-style:italic;letter-spacing:2px;color:#a8d8ff;line-height:1;text-shadow:0 0 10px #1a5c9e55}
+  .division{font-size:13px;letter-spacing:1.5px;line-height:1.55;color:#7ac1ed;font-weight:700}
+  .division strong{color:#b7ddf6}.header-rule{height:1px;background:linear-gradient(90deg,#2f88be,transparent);flex:1;margin-left:26px}
+  .motto{font-family:Consolas,"Courier New",monospace;color:#60c8ff;font-size:14px;letter-spacing:2px;margin-right:14px}
+  .orbital{position:relative;width:49px;height:28px;border:2px solid #3cb7f0;border-radius:50%;transform:rotate(-16deg);margin-right:8px}.orbital:before{content:"";position:absolute;left:14px;top:1px;width:22px;height:22px;background:#1979bf;border-radius:50%;box-shadow:inset 4px 3px 4px #61c5ff88}.orbital:after{content:"";position:absolute;left:-7px;right:-7px;top:10px;border-top:2px solid #56bffd}
+  .system-brand{font-size:24px;letter-spacing:6px;line-height:.9;color:#a5cce7}.system-brand small{display:block;font-size:10px;letter-spacing:2px;text-align:right;color:#68acd4;margin-top:6px}
+  #main{display:grid;grid-template-columns:518px 760px 550px;grid-template-rows:minmax(0,1fr);gap:16px;min-height:0}
+  .panel{position:relative;min-width:0;background:linear-gradient(120deg,#07192a 0%,#03101f 48%,#051728 100%);border:1px solid #2672a0;box-shadow:inset 0 0 0 3px #03101e,inset 0 0 0 4px #103a58,0 0 15px #0a446a35;clip-path:polygon(0 16px,16px 0,calc(100% - 13px) 0,100% 13px,100% calc(100% - 17px),calc(100% - 17px) 100%,15px 100%,0 calc(100% - 15px))}
+  .panel:before,.panel:after{content:"";position:absolute;pointer-events:none;width:24px;height:24px;z-index:3}.panel:before{top:6px;right:6px;border-top:3px solid #3dbffa;border-right:3px solid #3dbffa}.panel:after{bottom:6px;left:6px;border-bottom:2px solid #3dbffa;border-left:2px solid #3dbffa}
+  .panel-title{height:43px;display:flex;align-items:center;gap:10px;padding:2px 18px 0;font-weight:750;letter-spacing:1px;font-size:21px;color:#b8def6;border-bottom:1px solid #15567e}
+  .title-led{width:13px;height:13px;transform:rotate(45deg);border-radius:3px;background:#88d8ff;box-shadow:0 0 11px #187ac2}
+  .fine{font-family:Consolas,"Courier New",monospace;letter-spacing:.7px}
+  .section-title{display:flex;align-items:center;gap:8px;color:#8fc5e6;font-size:16px;letter-spacing:1.2px;font-weight:700}.section-title:after{content:"";height:1px;flex:1;background:linear-gradient(90deg,#1f6c99,transparent)}
+  /* Navigation */
+  #navigation{padding:0 16px 14px}
+  #navigation .panel-title{margin:0 -8px 7px;padding-left:10px}
+  .destination-card{height:116px;border:1px solid #258bc0;border-radius:5px;padding:9px 14px;background:linear-gradient(105deg,#08233d 0,#071c32 48%,#041222 100%);box-shadow:inset 0 1px 12px #09508255;display:flex;align-items:center;gap:15px}
+  .dest-symbol{width:66px;height:66px;flex:none;display:grid;place-items:center;border:1px solid #2882bc;border-radius:50%;background:radial-gradient(circle,#194c85 0%,#0c2b57 37%,#061425 70%);color:#a7d8ff;font-size:45px;line-height:1;text-shadow:0 0 15px #3b91fc}
+  .dest-copy{min-width:0}.dest-name{font-size:29px;line-height:1.03;font-weight:700;letter-spacing:.5px;color:#d9efff;text-shadow:0 0 9px #3087d765}.dest-sub{font-size:15px;font-weight:700;color:#7fc8f0;margin-top:7px;letter-spacing:.4px}.dest-sub.lock{color:#35e7c6;margin-top:3px}
+  .preset-heading{margin:13px 0 8px}.preset-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}.preset{height:60px;border:1px solid #206895;border-radius:3px;background:linear-gradient(#081d32,#061427);color:#82bfe4;font-size:17px;letter-spacing:.35px;font-weight:700;box-shadow:inset 0 1px #2a6f9366,inset 0 -3px #010b16;display:flex;align-items:center;justify-content:center;gap:7px}
+  .preset .glyph{font-size:23px;color:#55ade0}.preset.active{border:2px solid #5cd1ff;color:#e7f7ff;background:linear-gradient(#0c3a63,#082542);box-shadow:0 0 12px #2c94ce55,inset 0 0 16px #1b76bb88}.preset:active,.key:active,.stage-button:active{transform:translateY(2px);filter:brightness(1.4)}
+  .coord-heading{margin:15px 0 7px}.coord-display{height:67px;border:1px solid #256e9b;border-radius:4px;background:#020e1c;display:flex;align-items:center;justify-content:space-around;padding:8px 4px;box-shadow:inset 0 2px 10px #000}.axis{min-width:132px;text-align:center;padding:5px 2px;color:#80b8db;border:1px solid transparent;border-radius:3px;font-size:13px;letter-spacing:1px}.axis b{display:block;margin-top:2px;font:700 19px Consolas,"Courier New",monospace;color:#cee9fa}.axis.active{background:#0a2943;border-color:#3aa5d9;color:#b2e8ff}.axis.active b{color:#fff}
+  .keypad{display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:repeat(5,58px);gap:7px;margin-top:9px}.key{grid-column:span 2;border:1px solid #287dad;border-radius:4px;background:linear-gradient(160deg,#11273e,#071b30 45%,#071426);color:#d7eaff;font-size:29px;font-style:italic;font-weight:700;box-shadow:inset 0 2px 2px #5eb4da33,inset 0 -4px #020c1b,0 1px 2px #000;transition:transform .09s,filter .09s,background .1s}.key.wide{grid-column:span 3}.key.action{font-size:23px;letter-spacing:1px}.key.enter{border:2px solid #79d5ff;background:linear-gradient(#0c3458,#071f39);color:white;box-shadow:0 0 10px #32a9df66,inset 0 1px #b9ebff88,inset 0 -4px #041327}.key.pressed{transform:translateY(3px);background:#1b5078;box-shadow:inset 0 3px 8px #000}
+  /* Portal instrument */
+  #portal-panel{overflow:hidden;background:radial-gradient(circle at 50% 44%,#09213e 0%,#041529 45%,#020c1a 83%)}
+  #portal-panel .portal-heading{position:absolute;z-index:3;left:0;right:0;top:0;height:55px;text-align:center;font-size:18px;font-weight:750;letter-spacing:1px;color:#b4defb;padding-top:10px}
+  #portal-panel .portal-heading:after{content:"";display:block;margin:7px auto 0;width:130px;height:1px;background:#247cac}
+  .spatial{position:absolute;z-index:4;left:20px;top:34px;padding:3px 6px;background:#031225cc;color:#b7dfff}.spatial .minor{font-size:14px;color:#8bbbd6;font-weight:700;letter-spacing:.8px}.spatial div:not(.minor){font:17px/1.36 Consolas,"Courier New",monospace;color:#57c9f7}.spatial span{color:#92b5cc;margin-right:11px}
+  .alignment{position:absolute;z-index:4;right:24px;top:36px;text-align:right;font-weight:700}.alignment .number{font-size:50px;line-height:1;color:#d7f0ff;text-shadow:0 0 10px #258eca88}.alignment .number small{font-size:32px}.alignment .caption{font-size:15px;letter-spacing:1px;color:#46d8c8;margin-top:3px}
+  .portal-svg{position:absolute;top:42px;left:0;width:760px;height:675px;overflow:visible}.portal-svg .slow-a,.portal-svg .slow-b,.portal-svg .slow-c,.portal-svg .correction,.portal-svg .pulse{transform-origin:380px 340px}.slow-a{animation:rotation 128s linear infinite}.slow-b{animation:rotation 174s linear infinite reverse}.slow-c{animation:rotation 222s linear infinite}.correction{animation:trim 11s ease-in-out infinite}.pulse{animation:orbitpulse 21s linear infinite;opacity:.55}
+  @keyframes rotation{to{transform:rotate(360deg)}}@keyframes trim{0%,100%{transform:rotate(-.55deg)}50%{transform:rotate(.65deg)}}@keyframes orbitpulse{0%{stroke-dashoffset:0;opacity:0}3%{opacity:.7}17%{opacity:.32}24%,100%{stroke-dashoffset:-1700;opacity:0}}
+  .surging .slow-a{animation-duration:44s}.surging .slow-b{animation-duration:60s}.surging .slow-c{animation-duration:77s}.calibrating .correction{animation:rotation 2.5s ease-in-out 1}.initiating .aperture{opacity:.5!important}.surging .energy-rim{opacity:1!important}
+  .portal-readouts{position:absolute;z-index:4;bottom:18px;left:20px;right:20px;display:flex;justify-content:space-between;align-items:flex-end}.readout-side{width:175px;font:15px/1.4 Consolas,"Courier New",monospace;color:#7bb8de}.readout-side strong{color:#daefff;font-size:18px}.readout-side.right{text-align:right}.core-status{text-align:center;min-width:240px;letter-spacing:1px;font-size:17px;color:#accee7}.core-status strong{display:block;margin-top:3px;color:var(--green);font-size:24px;text-shadow:0 0 9px #15cfa769}
+  .portal-event{position:absolute;z-index:5;top:51%;left:50%;transform:translate(-50%,-50%);padding:10px 20px;color:#d5f3ff;font-size:22px;font-weight:700;letter-spacing:2px;border:1px solid #49b8e4;background:#041c36ed;box-shadow:0 0 26px #2383c177;opacity:0;pointer-events:none;transition:opacity .5s}.portal-event.show{opacity:1}
+  /* Energy / operations */
+  #operations{display:flex;flex-direction:column;gap:8px;min-width:0}
+  .ops-panel{padding:0 13px}.ops-panel .panel-title{margin:0 -5px 8px;padding-left:9px;font-size:19px}.live{font-size:13px;letter-spacing:1.3px;margin-left:auto;color:#9ed5e6;display:flex;align-items:center;gap:7px}.live:before{content:"";width:7px;height:7px;background:var(--green);border-radius:50%;box-shadow:0 0 8px var(--green)}
+  .energy-panel{height:400px}.energy-panel .panel-title{height:39px;margin-bottom:4px}.energy-top{height:146px;display:grid;grid-template-columns:1fr 67px;gap:10px}.wave-wrap{height:141px;position:relative;border:1px solid #21618b;background:repeating-linear-gradient(90deg,transparent 0,transparent 38px,#20517455 39px,#20517455 40px),repeating-linear-gradient(0deg,#071b30 0,#071b30 32px,#20517455 33px,#20517455 34px);box-shadow:inset 0 0 15px #000}.wave-wrap:after{content:"ENERGY SIGNATURE / 07";position:absolute;left:9px;bottom:6px;color:#749fbf;font:11px Consolas,"Courier New",monospace;letter-spacing:.5px}canvas{display:block;width:100%;height:100%}.monitor-bars{display:flex;align-items:end;gap:4px;height:80px;padding:8px 2px 0;border-bottom:1px solid #245d80}.monitor-bars i{display:block;width:8px;height:var(--h);background:repeating-linear-gradient(to top,#3fd4ed 0 5px,transparent 5px 8px);opacity:.8}.mini-label{font:12px/1.15 Consolas,"Courier New",monospace;color:#94bfdd;margin-top:6px}.mini-label b{font:700 23px "Segoe UI",Arial,sans-serif;color:#d7efff}
+  .surge-status{height:25px;display:flex;align-items:center;justify-content:space-between;color:#7eb4d6;font:13px Consolas,"Courier New",monospace;letter-spacing:.8px}.surge-status .event{color:#5ce0c2;font-weight:700}.surge-status .event.amber{color:var(--amber)}
+  .meters{display:grid;gap:3px}.meter-label{display:flex;justify-content:space-between;align-items:baseline;color:#c0def2;font-size:16px;font-weight:700;letter-spacing:.5px}.meter-label output{color:#ccecff;font-size:18px;min-width:73px;text-align:right}.meter input{appearance:none;-webkit-appearance:none;display:block;margin:1px 1px 0;width:calc(100% - 3px);height:21px;background:transparent;touch-action:none;cursor:pointer}.meter input::-webkit-slider-runnable-track{height:12px;border:1px solid #2d8fbd;border-radius:7px;background:linear-gradient(to right,#2189c2,#58dafa var(--fill),#061b2e var(--fill),#061b2e);box-shadow:inset 0 1px 5px #000}.meter input::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:24px;height:24px;margin-top:-7px;border-radius:50%;border:2px solid #b4edff;background:linear-gradient(#66c8fb,#218bc7);box-shadow:0 0 9px #19a5ec88,0 2px 4px #000}.meter input::-moz-range-track{height:12px;border:1px solid #2d8fbd;border-radius:7px;background:linear-gradient(to right,#2189c2,#58dafa var(--fill),#061b2e var(--fill),#061b2e)}.meter input::-moz-range-thumb{width:21px;height:21px;border-radius:50%;border:2px solid #b4edff;background:#329fd5}
+  .sequence-panel{height:123px}.sequence-panel .panel-title{height:39px;margin-bottom:5px}.sequence-buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.stage-button{height:65px;min-width:0;border:1px solid #297ca8;border-radius:3px;background:linear-gradient(#0e2a45,#061529);color:#c3e1f4;box-shadow:inset 0 2px #3985a333,inset 0 -4px #020b17;font-weight:700;font-size:14px;letter-spacing:.35px;transition:.15s}.stage-button span{display:block;margin:0 auto 5px;width:25px;height:25px;border-radius:50%;border:1px solid #70c7f5;background:#135891;color:white;line-height:24px;font-size:17px;box-shadow:0 0 7px #247db5}.stage-button.active{border-color:#8cdbff;background:#0e395a}.stage-button.active span{background:#45bbec;color:#00182b}
+  .abort-bay{flex:1;min-height:0;display:flex;align-items:center;gap:15px;padding:10px 6px 2px}.abort-hazard{width:272px;height:272px;flex:none;border-radius:50%;padding:14px;background:repeating-conic-gradient(from 0deg,#5a452e 0deg 11deg,#ad7640 11deg 17deg,#101b25 17deg 29deg);box-shadow:0 0 0 3px #071626,0 0 0 5px #31506b,0 6px 16px #000;display:grid;place-items:center}.abort-hazard:before{content:"";position:absolute;pointer-events:none;width:238px;height:238px;border-radius:50%;border:10px solid #090f1d;box-shadow:inset 0 0 0 2px #81533b}
+  #abort{position:relative;width:215px;height:215px;border-radius:50%;border:5px solid #ff6563;color:white;background:radial-gradient(circle at 42% 32%,#e9393c 0%,#bc101a 48%,#65090f 80%,#3c060d 100%);box-shadow:inset 0 5px 9px #ffc5ad88,inset 0 -13px 20px #300006,0 0 0 5px #35080c,0 0 0 9px #bc2d32,0 0 22px #cd252849;text-align:center;text-shadow:0 2px 4px #470009;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px;font-size:26px;font-weight:900;line-height:.94;letter-spacing:.7px;transition:transform .16s,filter .2s}
+  #abort .warning{font:800 53px/1 Arial,sans-serif;margin-bottom:5px;color:#fff}#abort .warning svg{display:block;width:66px;height:57px}#abort:active,#abort.engaged{transform:scale(.94);filter:brightness(.82)}
+  .danger-note{flex:1;min-width:0;border:1px solid #7d3139;border-radius:4px;background:#140c18;padding:13px 10px;color:#c1abc0;font:13px/1.55 Consolas,"Courier New",monospace;letter-spacing:.25px}.danger-note strong{display:block;color:#ef7675;border-bottom:1px solid #73353b;padding-bottom:7px;margin-bottom:7px;font:800 19px Arial,sans-serif}.danger-note strong:before{content:"△ ";font-size:22px}
+  /* Lower strip */
+  #footer{width:1294px;display:grid;grid-template-columns:815px 463px;gap:16px}.footer-panel{height:153px;padding:0 12px}.footer-title{height:32px;display:flex;align-items:center;gap:6px;border-bottom:1px solid #174d70;color:#acdbf7;font-size:17px;letter-spacing:1px;font-weight:700}.footer-title:before{content:"◆";font-size:12px;color:#39baf3}.status-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:7px;padding-top:6px}.status-tile{height:101px;border:1px solid #26749e;border-radius:4px;background:linear-gradient(#0c253d,#071528);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:inset 0 1px #4096bd33}.status-icon{height:40px;font-size:33px;line-height:1;color:#76cfff;text-shadow:0 0 10px #318fce}.status-icon svg{width:37px;height:37px;stroke:#75caff;fill:none;stroke-width:2}.status-name{font-weight:700;color:#c5e4f6;font-size:14px;margin-top:3px}.status-led{margin-top:7px;width:13px;height:13px;border-radius:50%;background:var(--green);box-shadow:0 0 9px var(--green),0 0 2px #fff}.status-led.soft{opacity:.45}.aborted .status-led{background:#5d6770;box-shadow:none}.aborted .status-tile{opacity:.5}
+  .diagnostics{padding:3px 6px 0;display:grid;grid-template-columns:1fr 20px;column-gap:10px}.diag-lines{font:15px/1.33 Consolas,"Courier New",monospace;color:#6bd0f4;white-space:nowrap}.diag-lines div:before{content:">";margin-right:11px;color:#36bded}.diag-lines div:first-child{color:#c0eaff}.diag-bars{display:flex;flex-direction:column;justify-content:space-around}.diag-bars i{height:5px;background:#135377;box-shadow:0 0 4px #167eb1}.diag-bars i:nth-child(3n){background:#3287ac}
+  /* State annunciator and shutdown */
+  #shutdown{position:absolute;z-index:11;left:548px;top:342px;width:760px;height:250px;display:none;flex-direction:column;align-items:center;justify-content:center;background:#0c101beF;border:2px solid #ed4a4f;box-shadow:0 0 0 8px #060b14,0 0 40px #9a1b28a0;color:white;text-align:center}.aborted #shutdown{display:flex}.shutdown-symbol{font-size:43px;color:#ff686b}.shutdown-title{font-size:42px;letter-spacing:2px;font-weight:800}.shutdown-sub{font:19px Consolas,"Courier New",monospace;color:#f0a1a1;margin:9px 0 15px}#reset{font-size:18px;letter-spacing:1px;font-weight:800;color:white;border:1px solid #a7d8ef;background:#104268;padding:12px 27px;border-radius:3px}.aborted #portal-panel,.aborted #navigation,.aborted .energy-panel,.aborted .sequence-panel{filter:brightness(.38)}.aborted #abort{box-shadow:inset 0 5px 9px #ffc5ad88,inset 0 -13px 20px #300006,0 0 0 5px #35080c,0 0 0 9px #bc2d32}
+  .surge-tag{position:absolute;right:18px;top:4px;color:var(--amber);font:700 16px Consolas,"Courier New",monospace;letter-spacing:1px;opacity:0;transition:opacity .4s}.surging .surge-tag{opacity:1}
+  @media (prefers-reduced-motion:reduce){.slow-a,.slow-b,.slow-c,.correction,.pulse{animation-duration:240s}.key,.stage-button{transition:none}}
+</style>
+</head>
+<body>
+<div id="scaler">
+  <i class="screw s1"></i><i class="screw s2"></i><i class="screw s3"></i><i class="screw s4"></i>
+  <div id="console">
+    <header>
+      <div class="brand">MV51</div><div class="division"><strong>RESEARCH DIVISION</strong><br>EXPLORE&nbsp; | &nbsp;LEARN&nbsp; | &nbsp;DISCOVER</div>
+      <div class="header-rule"></div><div class="motto">SOMEWHERE ELSE AWAITS</div><div class="orbital" aria-hidden="true"></div><div class="system-brand">MV51<small>PORTAL SYSTEMS</small></div>
+    </header>
+    <div id="main">
+      <section class="panel" id="navigation" aria-label="Destination and coordinate entry">
+        <div class="panel-title"><i class="title-led"></i>DESTINATION</div>
+        <div class="destination-card"><div class="dest-symbol" aria-hidden="true">◎</div><div class="dest-copy"><div class="dest-name" id="destName">A GALAXY FAR,<br>FAR AWAY…</div><div class="dest-sub">COORDINATES: <span id="coordClass">CLASSIFIED</span></div><div class="dest-sub lock">VECTOR LOCK: <span id="vectorLock">ACQUIRED</span></div></div></div>
+        <div class="section-title preset-heading">DESTINATION PRESETS</div>
+        <div class="preset-grid" id="presets">
+          <button class="preset" data-dest="EARTH"><span class="glyph">◉</span>EARTH</button>
+          <button class="preset" data-dest="MARS"><span class="glyph">◌</span>MARS</button>
+          <button class="preset" data-dest="EXUMA"><span class="glyph">≈</span>EXUMA</button>
+          <button class="preset" data-dest="ANTARCTICA"><span class="glyph">✧</span>ANTARCTICA</button>
+          <button class="preset" data-dest="DEEP SPACE"><span class="glyph">⌾</span>DEEP SPACE</button>
+          <button class="preset active" data-dest="A GALAXY FAR, FAR AWAY…" aria-pressed="true"><span class="glyph">◎</span>FAR GALAXY</button>
+        </div>
+        <div class="section-title coord-heading">MANUAL COORDINATE ENTRY</div>
+        <div class="coord-display" aria-label="Spatial coordinates">
+          <div class="axis active" data-axis="0" role="button" tabindex="0">X<b id="axis0">−7392.41</b></div>
+          <div class="axis" data-axis="1" role="button" tabindex="0">Y<b id="axis1">2284.17</b></div>
+          <div class="axis" data-axis="2" role="button" tabindex="0">Z<b id="axis2">5587.03</b></div>
+        </div>
+        <div class="keypad" id="keypad" aria-label="Coordinate keypad">
+          <button class="key" data-key="1">1</button><button class="key" data-key="2">2</button><button class="key" data-key="3">3</button>
+          <button class="key" data-key="4">4</button><button class="key" data-key="5">5</button><button class="key" data-key="6">6</button>
+          <button class="key" data-key="7">7</button><button class="key" data-key="8">8</button><button class="key" data-key="9">9</button>
+          <button class="key" data-key="0">0</button><button class="key" data-key=".">.</button><button class="key" data-key="±">±</button>
+          <button class="key wide action" data-key="CLR">CLR</button><button class="key wide action enter" data-key="ENTER">ENTER</button>
+        </div>
+      </section>
+      <section class="panel" id="portal-panel" aria-label="Portal alignment visualization">
+        <div class="portal-heading">PORTAL ALIGNMENT</div><div class="surge-tag">▲ ENERGY SURGE</div>
+        <div class="spatial"><div class="minor">SPATIAL SYNC</div><div><span>X</span><i id="syncX">−7392.41</i></div><div><span>Y</span><i id="syncY">2284.17</i></div><div><span>Z</span><i id="syncZ">5587.03</i></div></div>
+        <div class="alignment"><div class="number"><span id="alignValue">97.8</span><small>%</small></div><div class="caption" id="alignCaption">STABLE</div></div>
+        <svg class="portal-svg" viewBox="0 0 760 680" aria-hidden="true">
+          <defs>
+            <radialGradient id="apertureGradient"><stop offset="0" stop-color="#0b2a4c"/><stop offset=".22" stop-color="#071b35"/><stop offset=".68" stop-color="#031327"/><stop offset="1" stop-color="#071e3d"/></radialGradient>
+            <linearGradient id="rimGradient" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#0d579d"/><stop offset=".24" stop-color="#44bfff"/><stop offset=".52" stop-color="#1467d0"/><stop offset=".74" stop-color="#4db9ff"/><stop offset="1" stop-color="#1154ad"/></linearGradient>
+            <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="5"/></filter>
+            <clipPath id="roundClip"><circle cx="380" cy="340" r="296"/></clipPath>
+          </defs>
+          <g fill="none" stroke="#1a5c93" stroke-width="1" opacity=".48"><path d="M380 27V653M68 340H692"/><circle cx="380" cy="340" r="306"/><circle cx="380" cy="340" r="290"/><circle cx="380" cy="340" r="268"/></g>
+          <g id="outerTicks"></g>
+          <g clip-path="url(#roundClip)"><circle cx="380" cy="340" r="239" fill="url(#apertureGradient)"/><g id="polarGrid"></g><g stroke="#17518a" stroke-width="1" opacity=".34"><path d="M90 340H670M380 51V629"/><circle cx="380" cy="340" r="185"/><circle cx="380" cy="340" r="140"/><circle cx="380" cy="340" r="94"/><circle cx="380" cy="340" r="48"/></g></g>
+          <circle class="energy-rim" cx="380" cy="340" r="236" fill="none" stroke="#2d82ef" stroke-width="38" opacity=".38" filter="url(#softGlow)"/>
+          <g id="microTracks"></g>
+          <circle cx="380" cy="340" r="239" fill="none" stroke="url(#rimGradient)" stroke-width="6" opacity=".93"/>
+          <circle cx="380" cy="340" r="254" fill="none" stroke="#45bcff" stroke-width="1.5" opacity=".8"/>
+          <circle cx="380" cy="340" r="221" fill="none" stroke="#2266c0" stroke-width="1.5" opacity=".9"/>
+          <g class="slow-a" fill="none" stroke="#50c2ff"><circle cx="380" cy="340" r="246" stroke-width="3" stroke-dasharray="164 20 95 410 285 570" opacity=".85"/><circle cx="380" cy="340" r="266" stroke-width="1" stroke-dasharray="2 9 2 16" opacity=".75"/></g>
+          <g class="slow-b" fill="none" stroke="#248ee5"><circle cx="380" cy="340" r="229" stroke-width="5" stroke-dasharray="105 150 260 320 80 523" opacity=".64"/><circle cx="380" cy="340" r="211" stroke-width="1" stroke-dasharray="12 17 4 70" opacity=".6"/></g>
+          <g class="slow-c" fill="none" stroke="#59bafa"><circle cx="380" cy="340" r="285" stroke-width="2" stroke-dasharray="130 21 180 252 340 868" opacity=".7"/><circle cx="380" cy="340" r="274" stroke-width="1" stroke-dasharray="2 7" opacity=".4"/></g>
+          <circle class="pulse" cx="380" cy="340" r="245" fill="none" stroke="#d3f6ff" stroke-width="4" stroke-linecap="round" stroke-dasharray="34 1700"/>
+          <g id="sectorTicks"></g>
+          <g class="correction" fill="none" stroke="#8adfff" stroke-width="2"><path d="M380 28v42M380 611v41M68 340h42M650 340h42"/><path d="M380 26l-7 14h14zM380 654l-7-14h14zM66 340l14-7v14zM694 340l-14-7v14z" fill="#81d9ff" stroke="none"/></g>
+          <g stroke="#51aeed" stroke-width="1" opacity=".8"><path d="M104 340h552M380 64v552"/><circle cx="380" cy="340" r="20" fill="none"/><circle cx="380" cy="340" r="3" fill="#c9f4ff" stroke="none"/></g>
+          <circle class="aperture" cx="380" cy="340" r="105" fill="none" stroke="#2a9cfd" stroke-width="2" opacity=".18" style="transition:opacity 1s"/>
+          <g fill="#88dfff" font-size="14" font-family="Consolas,monospace"><text x="375" y="19">N</text><text x="375" y="674">S</text><text x="38" y="345">W</text><text x="715" y="345">E</text></g>
+        </svg>
+        <div id="portalEvent" class="portal-event">CALIBRATING</div>
+        <div class="portal-readouts"><div class="readout-side">GRAVITY&nbsp; 1.00 G<br>ATMOS&nbsp;&nbsp;&nbsp; 0.98 BAR<br>RADIATION 0.02 mSv</div><div class="core-status">PORTAL CORE<strong id="coreState">ONLINE</strong></div><div class="readout-side right">FIELD DIAMETER<br><strong id="diameterText">12.4 m</strong><br>EST. TRANSIT &lt;1 SEC</div></div>
+      </section>
+      <section id="operations" aria-label="Energy and portal sequence">
+        <div class="panel ops-panel energy-panel"><div class="panel-title">ENERGY MANAGEMENT <span class="live">LIVE</span></div>
+          <div class="energy-top"><div class="wave-wrap"><canvas id="waveform" width="439" height="141" aria-label="Moving energy waveform"></canvas></div><div><div class="monitor-bars" id="monitorBars"><i style="--h:62%"></i><i style="--h:79%"></i><i style="--h:69%"></i><i style="--h:87%"></i><i style="--h:73%"></i></div><div class="mini-label">FIELD<br>STABILITY<br><b id="miniStability">96%</b></div></div></div>
+          <div class="surge-status"><span>FIELD RESPONSE / AUTOMATIC</span><span class="event" id="eventLabel">FIELD STABLE</span></div>
+          <div class="meters">
+            <div class="meter"><div class="meter-label"><span>POWER OUTPUT</span><output id="powerValue">78%</output></div><input id="power" aria-label="Power output" type="range" min="0" max="100" value="78"></div>
+            <div class="meter"><div class="meter-label"><span>FIELD STABILITY</span><output id="stabilityValue">96%</output></div><input id="stability" aria-label="Field stability" type="range" min="0" max="100" value="96"></div>
+            <div class="meter"><div class="meter-label"><span>CONTAINMENT</span><output id="containmentValue">82%</output></div><input id="containment" aria-label="Containment" type="range" min="0" max="100" value="82"></div>
+            <div class="meter"><div class="meter-label"><span>FIELD DIAMETER</span><output id="diameterValue">12.4 m</output></div><input id="diameter" aria-label="Field diameter" type="range" min="0" max="20" step="0.1" value="12.4"></div>
+          </div>
+        </div>
+        <div class="panel ops-panel sequence-panel"><div class="panel-title">PORTAL SEQUENCE</div><div class="sequence-buttons"><button class="stage-button" data-stage="calibrate"><span>1</span>CALIBRATE</button><button class="stage-button" data-stage="stabilize"><span>2</span>STABILIZE</button><button class="stage-button" data-stage="lock"><span>3</span>LOCK VECTOR</button><button class="stage-button" data-stage="initiate"><span>4</span>INITIATE</button></div></div>
+        <div class="abort-bay"><div class="abort-hazard"><button id="abort" aria-label="Emergency abort"><span class="warning"><svg viewBox="0 0 66 57" aria-hidden="true"><path d="M33 3 63 54H3Z" fill="none" stroke="white" stroke-width="4" stroke-linejoin="round"/><path d="M33 19v17" stroke="white" stroke-width="5" stroke-linecap="round"/><circle cx="33" cy="44" r="3" fill="white"/></svg></span>EMERGENCY<br>ABORT</button></div><div class="danger-note"><strong>DANGER</strong>FIELD COLLAPSE<br>SPATIAL SHEAR<br>RADIATION SPIKE<br><br>DO NOT ENGAGE<br>UNLESS NECESSARY</div></div>
+      </section>
+    </div>
+    <div id="footer">
+      <section class="panel footer-panel"><div class="footer-title">SYSTEM STATUS</div><div class="status-grid">
+        <div class="status-tile"><div class="status-icon">ϟ</div><div class="status-name">POWER</div><i class="status-led"></i></div>
+        <div class="status-tile"><div class="status-icon"><svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="13"/><circle cx="20" cy="20" r="3"/><path d="M20 1v12M20 27v12M1 20h12M27 20h12"/></svg></div><div class="status-name">ALIGNMENT</div><i class="status-led"></i></div>
+        <div class="status-tile"><div class="status-icon">◎</div><div class="status-name">GRAVITY</div><i class="status-led"></i></div>
+        <div class="status-tile"><div class="status-icon">✺</div><div class="status-name">ATMOSPHERE</div><i class="status-led"></i></div>
+        <div class="status-tile"><div class="status-icon">❄</div><div class="status-name">COOLANT</div><i class="status-led"></i></div>
+        <div class="status-tile"><div class="status-icon">⬡</div><div class="status-name">SHIELD</div><i class="status-led"></i></div>
+        <div class="status-tile"><div class="status-icon">⌁</div><div class="status-name">COMMS</div><i class="status-led"></i></div>
+      </div></section>
+      <section class="panel footer-panel"><div class="footer-title">DIAGNOSTICS</div><div class="diagnostics"><div class="diag-lines" id="diagLines"><div>Quantum field stable</div><div>Containment normal</div><div>Navigation lock confirmed</div><div>Wormhole aperture ready</div><div>Awaiting final authorization…</div></div><div class="diag-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></section>
+    </div>
+  </div>
+  <div id="shutdown" role="alert"><div class="shutdown-symbol">△</div><div class="shutdown-title">EMERGENCY SHUTDOWN</div><div class="shutdown-sub" id="shutdownSub">FIELD COLLAPSE IN PROGRESS</div><button id="reset">RESET SYSTEM</button></div>
+</div>
+<script>
+(()=>{
+  'use strict';
+  const $=id=>document.getElementById(id), root=$('scaler');
+  function fit(){const scale=Math.min(innerWidth/1920,innerHeight/1080);root.style.transform=`scale(${scale})`;root.style.left=`${(innerWidth-1920*scale)/2}px`;root.style.top=`${(innerHeight-1080*scale)/2}px`}
+  addEventListener('resize',fit);fit();
+  let cursorTimer;function wakeCursor(){document.body.classList.remove('cursor-idle');clearTimeout(cursorTimer);cursorTimer=setTimeout(()=>document.body.classList.add('cursor-idle'),3000)}
+  ['pointermove','pointerdown','keydown'].forEach(type=>addEventListener(type,wakeCursor,{passive:true}));wakeCursor();
+  // All ring marks are inline geometry; the file does not fetch any assets.
+  const ns='http://www.w3.org/2000/svg';function line(parent,x1,y1,x2,y2,stroke,width,opacity){let el=document.createElementNS(ns,'line');Object.entries({x1,y1,x2,y2,stroke,'stroke-width':width,opacity}).forEach(([k,v])=>el.setAttribute(k,v));parent.appendChild(el)}
+  for(let i=0;i<180;i++){const a=(i*2*Math.PI/180)-Math.PI/2;const r=i%15===0?297:i%5===0?305:311;const r2=i%15===0?321:i%5===0?317:315;line($('outerTicks'),380+Math.cos(a)*r,340+Math.sin(a)*r,380+Math.cos(a)*r2,340+Math.sin(a)*r2,i%15===0?'#85d8ff':'#3277a8',i%15===0?2:1,i%5===0?.86:.43)}
+  for(let i=0;i<72;i++){const a=i*2*Math.PI/72;const r=i%9===0?258:261;const r2=i%9===0?274:268;line($('sectorTicks'),380+Math.cos(a)*r,340+Math.sin(a)*r,380+Math.cos(a)*r2,340+Math.sin(a)*r2,'#54b0ec',i%9===0?2:1,i%9===0?.84:.32)}
+  for(let i=0;i<300;i++){const a=i*2*Math.PI/300;const r=225+(i%5);const r2=238+(i%7);line($('microTracks'),380+Math.cos(a)*r,340+Math.sin(a)*r,380+Math.cos(a)*r2,340+Math.sin(a)*r2,i%9===0?'#90dbff':'#248ce3',i%9===0?1.5:1,i%9===0?.5:.18)}
+  for(let i=0;i<24;i++){const a=i*2*Math.PI/24;line($('polarGrid'),380+Math.cos(a)*52,340+Math.sin(a)*52,380+Math.cos(a)*202,340+Math.sin(a)*202,'#184675',1,.24)}
+
+  const state={power:78,stability:96,containment:82,diameter:12.4,alignment:97.8,surge:false,aborted:false,initiating:false,manualUntil:0,axis:0,typed:'',destination:'A GALAXY FAR, FAR AWAY…',lastWave:0};
+  const meterIds=['power','stability','containment','diameter'];
+  function showMeters(){for(const id of meterIds){const input=$(id),v=state[id];input.value=v;input.style.setProperty('--fill',`${Number(v)/Number(input.max)*100}%`);$(id+'Value').textContent=id==='diameter'?`${Number(v).toFixed(1)} m`:`${Math.round(v)}%`}$('miniStability').textContent=`${Math.round(state.stability)}%`;$('diameterText').textContent=`${Number(state.diameter).toFixed(1)} m`;$('alignValue').textContent=state.alignment.toFixed(1)}
+  showMeters();
+  meterIds.forEach(id=>$(id).addEventListener('input',e=>{if(state.aborted)return;state[id]=Number(e.target.value);state.manualUntil=Date.now()+12000;showMeters();log(`${id.toUpperCase().replace(/_/g,' ')} manual adjustment`)}));
+  const diagnostics=['Quantum field stable','Containment normal','Navigation lock confirmed','Wormhole aperture ready','Awaiting final authorization…'];
+  const ambientMessages=['Quantum field stable','Containment normal','Navigation lock confirmed','Wormhole aperture ready','Atmospheric buffer nominal','Spatial drift within tolerance','Coolant loop circulating','Shield phase synchronized','Awaiting final authorization…'];
+  function paintLogs(){let host=$('diagLines');host.replaceChildren(...diagnostics.map(message=>{let d=document.createElement('div');d.textContent=message;return d}))}
+  function log(message){diagnostics.shift();diagnostics.push(message);paintLogs()}
+  let eventTimer;function overlay(message,ms=2100){clearTimeout(eventTimer);$('portalEvent').textContent=message;$('portalEvent').classList.add('show');eventTimer=setTimeout(()=>$('portalEvent').classList.remove('show'),ms)}
+  function setAxis(index){state.axis=index;document.querySelectorAll('.axis').forEach((el,i)=>el.classList.toggle('active',i===index))}
+  function handleKey(key,button){if(state.aborted)return;button?.classList.add('pressed');setTimeout(()=>button?.classList.remove('pressed'),160);let text=state.typed;
+    if(key==='CLR'){state.typed='';$('axis'+state.axis).textContent='—';log('Coordinate buffer cleared');return}
+    if(key==='ENTER'){if(!text||text==='-'||text==='.')return;const display=Number(text).toFixed(2);$('axis'+state.axis).textContent=display;[$('syncX'),$('syncY'),$('syncZ')][state.axis].textContent=display;state.typed='';setAxis((state.axis+1)%3);$('coordClass').textContent='MANUAL INPUT';$('vectorLock').textContent='PENDING';log('Manual coordinate accepted');return}
+    if(key==='±')state.typed=text.startsWith('-')?text.slice(1):'-'+text;
+    else if(key==='.')state.typed=text.includes('.')?text:(text||'0')+'.';
+    else if(text.replace(/\D/g,'').length<9)state.typed=text+key;
+    $('axis'+state.axis).textContent=state.typed||'—';
+  }
+  $('keypad').addEventListener('click',e=>{const button=e.target.closest('[data-key]');if(button)handleKey(button.dataset.key,button)});
+  document.querySelectorAll('.axis').forEach(axis=>{axis.addEventListener('click',()=>setAxis(Number(axis.dataset.axis)));axis.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();setAxis(Number(axis.dataset.axis))}})});
+  $('presets').addEventListener('click',e=>{const button=e.target.closest('[data-dest]');if(!button||state.aborted)return;document.querySelectorAll('.preset').forEach(b=>{b.classList.remove('active');b.removeAttribute('aria-pressed')});button.classList.add('active');button.setAttribute('aria-pressed','true');state.destination=button.dataset.dest;if(state.destination.includes('GALAXY')){$('destName').replaceChildren(document.createTextNode('A GALAXY FAR,'),document.createElement('br'),document.createTextNode('FAR AWAY…'))}else $('destName').textContent=state.destination;$('coordClass').textContent=state.destination.includes('GALAXY')?'CLASSIFIED':'PRESET DATA';$('vectorLock').textContent='ACQUIRED';log(`Destination selected: ${state.destination}`)});
+  let actionTimers=[];function later(fn,ms){const t=setTimeout(()=>{actionTimers=actionTimers.filter(item=>item!==t);fn()},ms);actionTimers.push(t);return t}function clearActions(){actionTimers.forEach(clearTimeout);actionTimers=[];clearTimeout(eventTimer);$('portalEvent').classList.remove('show');document.querySelectorAll('.stage-button').forEach(b=>b.classList.remove('active'))}
+  function stage(name){if(state.aborted||state.initiating||state.surge)return;clearActions();root.classList.remove('calibrating');$('alignCaption').textContent='STABLE';let button=document.querySelector(`[data-stage="${name}"]`);button.classList.add('active');
+    if(name==='calibrate'){root.classList.add('calibrating');$('alignCaption').textContent='CALIBRATING';overlay('CALIBRATING',1800);log('Alignment sensors calibrating');later(()=>{root.classList.remove('calibrating');state.alignment=97.8;$('alignCaption').textContent='STABLE';showMeters();button.classList.remove('active');log('Calibration complete')},2400)}
+    if(name==='stabilize'){state.stability=99;state.containment=85;showMeters();overlay('FIELD STABILIZING',1600);log('Containment compensation engaged');later(()=>{button.classList.remove('active');log('Quantum field stable')},2100)}
+    if(name==='lock'){$('vectorLock').textContent='ACQUIRED';overlay('VECTOR LOCKED',1800);log('Navigation lock confirmed');later(()=>button.classList.remove('active'),2100)}
+    if(name==='initiate'){state.initiating=true;root.classList.add('initiating');$('coreState').textContent='FORMING';$('coreState').style.color='#a7e9ff';overlay('APERTURE FORMING',2700);log('Initiation sequence authorized');state.power=89;showMeters();later(()=>{overlay('TRANSIT WINDOW OPEN',2700);$('coreState').textContent='ACTIVE';log('Wormhole aperture active')},3000);later(()=>{root.classList.remove('initiating');state.initiating=false;state.power=79;$('coreState').textContent='ONLINE';$('coreState').style.color='';showMeters();button.classList.remove('active');log('Transit window closed • system ready')},7800)}
+  }
+  document.querySelectorAll('.stage-button').forEach(b=>b.addEventListener('click',()=>stage(b.dataset.stage)));
+  let surgeTimer;function scheduleSurge(){clearTimeout(surgeTimer);surgeTimer=setTimeout(surge,25000+Math.random()*15000)}
+  function surge(){if(state.aborted||state.initiating){scheduleSurge();return}state.surge=true;root.classList.add('surging');$('eventLabel').textContent='▲ ENERGY SURGE';$('eventLabel').classList.add('amber');log('Energy surge detected • auto-compensating');let steps=[{t:0,p:86,c:83,s:95},{t:850,p:94,c:85,s:94},{t:1750,p:95,c:86,s:95},{t:3200,p:87,c:85,s:96},{t:4550,p:81,c:83,s:97},{t:6000,p:79,c:82,s:97}];steps.forEach(({t,p,c,s})=>later(()=>{if(state.aborted)return;state.power=p;state.containment=c;state.stability=s;showMeters()},t));later(()=>{state.surge=false;root.classList.remove('surging');$('eventLabel').textContent='FIELD STABLE';$('eventLabel').classList.remove('amber');log('Field stable • containment normal');scheduleSurge()},6800)}
+  function abort(){if(state.aborted)return;state.aborted=true;state.surge=false;state.initiating=false;root.classList.remove('surging','initiating','calibrating');root.classList.add('aborted');clearTimeout(surgeTimer);clearActions();$('abort').classList.add('engaged');$('shutdownSub').textContent='FIELD COLLAPSE IN PROGRESS';$('coreState').textContent='OFFLINE';$('eventLabel').textContent='SHUTDOWN';$('eventLabel').classList.remove('amber');state.power=0;state.stability=0;state.containment=0;showMeters();log('Emergency abort command received');later(()=>$('shutdownSub').textContent='FIELD CONTAINED • SYSTEM SAFE',2400);later(reset,13500)}
+  function reset(){if(!state.aborted)return;clearActions();state.aborted=false;root.classList.remove('aborted');$('abort').classList.remove('engaged');$('coreState').textContent='ONLINE';$('coreState').style.color='';$('eventLabel').textContent='FIELD STABLE';$('alignCaption').textContent='STABLE';state.power=78;state.stability=96;state.containment=82;state.diameter=12.4;state.alignment=97.8;showMeters();log('System reset • all stations nominal');scheduleSurge()}
+  $('abort').addEventListener('click',abort);$('reset').addEventListener('click',reset);
+  // One small piece of telemetry changes at a time, at a slow cadence.
+  setInterval(()=>{if(state.aborted||state.surge||state.initiating||Date.now()<state.manualUntil)return;const which=Math.floor(Math.random()*3),nudge=(Math.random()-.5)*1.6,clamp=(n,min,max)=>Math.max(min,Math.min(max,n));if(which===0)state.power=clamp(state.power+nudge,76,82);if(which===1)state.stability=clamp(state.stability+nudge,94,99);if(which===2)state.containment=clamp(state.containment+nudge,80,86);if(Math.random()<.3)state.alignment=Math.round(clamp(state.alignment+(Math.random()-.5)*.2,97.5,98.0)*10)/10;showMeters()},3100);
+  setInterval(()=>{if(!state.aborted&&!state.surge)log(ambientMessages[Math.floor(Math.random()*ambientMessages.length)])},9700);
+  setInterval(()=>{if(state.aborted)return;let leds=[...document.querySelectorAll('.status-led')];let led=leds[Math.floor(Math.random()*leds.length)];led.classList.add('soft');setTimeout(()=>led.classList.remove('soft'),160+Math.random()*300)},5100);
+  setInterval(()=>{if(state.aborted)return;let bars=[...document.querySelectorAll('#monitorBars i')];bars[Math.floor(Math.random()*bars.length)].style.setProperty('--h',`${58+Math.random()*32}%`)},1900);
+  const canvas=$('waveform'),ctx=canvas.getContext('2d');
+  function drawWave(ms){if(ms-state.lastWave<34){requestAnimationFrame(drawWave);return}state.lastWave=ms;const w=canvas.width,h=canvas.height,phase=ms*.0007,amplitude=state.aborted?.08:state.surge?1.6:1;ctx.clearRect(0,0,w,h);
+    ctx.fillStyle='#061629';ctx.globalAlpha=.34;ctx.fillRect(0,0,w,h);ctx.globalAlpha=1;
+    ctx.beginPath();for(let x=0;x<w;x+=2){let t=x*.033+phase*2.2;let v=Math.sin(t*1.61)*8+Math.sin(t*4.18)*5+Math.sin(t*8.47)*3;let spike=Math.pow(Math.max(0,Math.sin(t*.68+.3)),23)*20;let y=h*.48-(v+spike)*amplitude;x?ctx.lineTo(x,y):ctx.moveTo(x,y)}ctx.strokeStyle=state.aborted?'#516c7b':'#49c7f8';ctx.lineWidth=2;ctx.shadowBlur=state.surge?10:5;ctx.shadowColor='#2aa9f4';ctx.stroke();ctx.shadowBlur=0;
+    let sweep=(phase*58)%w;ctx.fillStyle='rgba(108,210,255,.19)';ctx.fillRect(sweep,13,1,h-29);requestAnimationFrame(drawWave)}requestAnimationFrame(drawWave);
+  scheduleSurge();
+  // Development hook for deterministic installation checks; no visible control.
+  window.MV51={surge,abort,reset,stage,getState:()=>({...state})};
+})();
+</script>
+</body>
+</html>
